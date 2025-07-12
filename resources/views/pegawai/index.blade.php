@@ -39,6 +39,47 @@
                 </tr>
                 @endforeach
             </tbody>
+        </table> <br> <br>
+
+        <h1>Daftar Insentif Pegawai</h1>
+        <div class="row">
+            <div class="col-8">
+                <form action="{{ route('insentif.import') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <input type="file" name="file" accept=".csv" required>
+                    <button type="submit" class="btn btn-success mb-3">Import CSV</button>
+                    <a href="{{ route('insentif.export') }}" class="btn btn-success mb-3">Export CSV</a>
+                </form>
+            </div>
+            <div class="col-4">
+                <form action="{{ route('insentif.destroyAll') }}" align="right" method="POST" onsubmit="return confirm('Yakin ingin menghapus semua data insentif?')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger mb-3">Hapus Semua Data Insentif</button>
+                </form>
+            </div>
+        </div>
+        <table class="table table-bordered">
+            <thead>
+                <tr class="table-primary" align="center">
+                    <th>ID</th>
+                    <th>Nama</th>
+                    <th>Jumlah Lembur</th>
+                    <th>Jumlah Absen</th>
+                    <th>Insentif</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($insentifs as $i)
+                <tr>
+                    <td>{{ $i->id }}</td>
+                    <td>{{ $i->nama }}</td>
+                    <td>{{ $i->jumlah_lembur }}</td>
+                    <td>{{ $i->jumlah_absen }}</td>
+                    <td>{{ $i->insentif }}</td>
+                </tr>
+                @endforeach
+            </tbody>
         </table>
     </div>
 </body>
