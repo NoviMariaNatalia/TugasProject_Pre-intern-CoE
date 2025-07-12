@@ -3,17 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\CustomerStatistic;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CustomerController extends Controller
 {
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         $customers = Customer::all();
-        return view('customers.index', compact ('customers'));
+        $customerStatistics = CustomerStatistic::all();
+        
+        return view('customers.index', compact('customers', 'customerStatistics'));
     }
 
     /**
@@ -43,7 +55,7 @@ class CustomerController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Customer $customer)
     {
         return view('customers.show', compact('customer'));
     }
@@ -80,5 +92,66 @@ class CustomerController extends Controller
         $customer->delete();
         
         return redirect()->route('customers.index')->with('success', 'Customer berhasil dihapus!');
+    }
+
+    /**
+     * Import CSV file and store to customer_statistics table
+     */
+    public function importCsv(Request $request)
+    {
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt|max:2048',
+        ]);
+
+        try {
+            $file = $request->file('csv_file');
+            
+            CustomerStatistic::truncate();
+
+            $csvData = file($file->getRealPath());
+            
+            array_shift($csvData);
+            
+            foreach ($csvData as $row) {
+                $row = trim($row);
+                
+                if (empty($row)) {
+                    continue;
+                }
+                
+                $data = explode(';', $row);
+                
+                if (count($data) >= 4) {
+                    $kategori = trim($data[0]);
+                    $week1 = (int) trim($data[1]);
+                    $week2 = (int) trim($data[2]);
+                    $week3 = (int) trim($data[3]);
+                    
+                    $total = $week1 + $week2 + $week3;
+                    
+                    CustomerStatistic::create([
+                        'kategori' => $kategori,
+                        'week_1' => $week1,
+                        'week_2' => $week2,
+                        'week_3' => $week3,
+                        'total' => $total,
+                    ]);
+                }
+            }
+
+            return redirect()->route('customers.index')->with('success', 'Data CSV berhasil diimport!');
+            
+        } catch (\Exception $e) {
+            return redirect()->route('customers.index')->with('error', 'Gagal import CSV: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Clear all customer statistics data
+     */
+    public function clearStatistics()
+    {
+        CustomerStatistic::truncate();
+        return redirect()->route('customers.index')->with('success', 'Data statistik berhasil dihapus!');
     }
 }
