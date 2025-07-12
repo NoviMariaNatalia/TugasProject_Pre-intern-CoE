@@ -66,8 +66,7 @@ class PegawaiController extends Controller
         $file = $request->file('file');
 
         if (($handle = fopen($file, 'r')) !== false) {
-            fgetcsv($handle, 1000, ';'); // Skip baris header pertama
-
+            fgetcsv($handle, 1000, ';');
             while (($data = fgetcsv($handle, 1000, ';')) !== false) {
                 if (count($data) >= 4) {
                     Insentif::create([
@@ -118,7 +117,8 @@ class PegawaiController extends Controller
     }
     public function hapusSemuaInsentif()
     {
-        \App\Models\Insentif::truncate(); // Menghapus seluruh data, tapi tidak menghapus strukturnya
+        \App\Models\Insentif::truncate();
         return redirect()->back()->with('success', 'Semua data insentif berhasil dihapus!');
     }
+
 }
